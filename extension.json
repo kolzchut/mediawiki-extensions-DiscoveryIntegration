@@ -1,0 +1,17 @@
+{
+	"name": "Discovery Integration",
+	"version": "0.1.0",
+	"update": "2018-06-19",
+	"author": "Dror S. [FFS] ([https://www.kolzchut.org.il Kol-Zchut])",
+	"url": "https://github.com/kolzchut/mediawiki-extensions-DiscoveryIntegration",
+	"description": "Add our \"Discovery\" component to articles",
+	"license-name": "GPL-2.0-or-later",
+	"type": "other",
+	"AutoloadClasses": {
+		"DiscoveryIntegrationHooks": "DiscoveryIntegrationHooks.php"
+	},
+	"Hooks": {
+		"ParserSectionCreate": "DiscoveryIntegrationHooks::onParserSectionCreate"
+	},
+	"manifest_version": 2
+}
