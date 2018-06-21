@@ -13,11 +13,12 @@ class DiscoveryIntegrationHooks {
 		// If this is the correct section, OR we didn't find the correct section yet and reached
 		// The fallback section, or we ran into the final section
 		if ( $isRightSection
-		     || ( $isFallbackSection && $added === false )
-		     || $sectionContent === HideMetadataSectionHooks::METADATA_CONTENT
+		     || ( !$added && $isFallbackSection )
+		     || ( !$added && $sectionContent === HideMetadataSectionHooks::METADATA_CONTENT )
 		) {
 			// Directly insert the <discovery> tag
 			$sectionContent = DiscoveryHooks::renderTagDiscovery( '', [], $parser ) . $sectionContent;
+			$added = true;
 		}
 	}
 
