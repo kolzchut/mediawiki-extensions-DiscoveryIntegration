@@ -28,7 +28,9 @@ class DiscoveryIntegrationHooks {
 	public static function onParserSectionCreate(
 		Parser $parser, $section, &$sectionContent, $showEditLinks
 	) {
-		if ( $section === 0 || $parser->getTitle()->isSpecialPage() === true ) {
+		$title = $parser->getTitle();
+
+		if ( $section === 0 || $parser->getTitle()->getNamespace() !== NS_MAIN ) {
 			return true;
 		};
 
