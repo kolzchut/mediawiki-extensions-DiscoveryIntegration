@@ -3,23 +3,29 @@
 
 class DiscoveryIntegrationHooks {
 
-	static function addBeforeSection(
-		Parser $parser, &$sectionContent, $targetSectionName, $fallbackSectionName = null
-	) {
-		static $added = false;
-		$isRightSection = self::isCorrectSection( $targetSectionName, $sectionContent );
-		$isFallbackSection = self::isCorrectSection( $fallbackSectionName, $sectionContent );
+	static function addBeforeSection( Parser $parser, &$sectionContent, $targetSectionNames ) {
+		$sectionID = self::getSectionID( $sectionContent );
+		$isLastSection = ( $sectionContent === HideMetadataSectionHooks::METADATA_CONTENT );
 
 		// If this is the correct section, OR we didn't find the correct section yet and reached
-		// The fallback section, or we ran into the final section
-		if ( $isRightSection
-		     || ( !$added && $isFallbackSection )
-		     || ( !$added && $sectionContent === HideMetadataSectionHooks::METADATA_CONTENT )
-		) {
+		// a fallback section, or we ran into the final section
+		if ( $isLastSection || in_array( $sectionID, $targetSectionNames ) ) {
 			// Directly insert the <discovery> tag
 			$sectionContent = DiscoveryHooks::renderTagDiscovery( '', [], $parser ) . $sectionContent;
-			$added = true;
+			$parser->getOutput()->setExtensionData( 'DiscoveryIntegrationAdded', true );
 		}
+	}
+
+	static function getSectionID( $sectionContent ) {
+		$matches = [];
+		$result = preg_match_all( '/id="(.*?)"/i', $sectionContent, $matches );
+
+		if ( $result !== 0 && isset( $matches[1] ) && isset( $matches[1][1] ) ) {
+			return $matches[1][1];
+		}
+
+		// Not found
+		return null;
 	}
 
 	static function isCorrectSection( $sectionName, $sectionContent ) {
@@ -30,13 +36,13 @@ class DiscoveryIntegrationHooks {
 		Parser $parser, $section, &$sectionContent, $showEditLinks
 	) {
 		$title = $parser->getTitle();
-
-		if ( $section === 0 || $parser->getTitle()->getNamespace() !== NS_MAIN ) {
-			return true;
-		};
-
 		$articleType = $parser->getOutput()->getExtensionData( 'ArticleType' );
-		if ( empty( $articleType ) ) {
+		$alreadyAdded = $parser->getOutput()->getExtensionData( 'DiscoveryIntegrationAdded' );
+
+
+		if ( $alreadyAdded || empty( $articleType )
+			|| $section === 0 || $title->getNamespace() !== NS_MAIN
+		) {
 			return true;
 		};
 
@@ -45,17 +51,23 @@ class DiscoveryIntegrationHooks {
 			case 'term':
 			case 'right':
 			case 'proceeding':
-				self::addBeforeSection( $parser, $sectionContent, 'פסקי_דין' );
+				self::addBeforeSection( $parser, $sectionContent,
+					[ 'פסקי_דין', 'חקיקה_ונהלים', 'הרחבות_ופרסומים', 'תודות' ]
+				);
 				break;
 			case 'service':
-				self::addBeforeSection( $parser, $sectionContent, 'הרחבות_ופרסומים' );
+				self::addBeforeSection( $parser, $sectionContent,
+					[ 'הרחבות_ופרסומים', 'תודות' ]
+				);
 				break;
 			case 'health':
-				self::addBeforeSection( $parser, $sectionContent, 'מידע_נוסף' );
+				self::addBeforeSection( $parser, $sectionContent, [ 'מידע_נוסף' ] );
 				break;
 			case 'ruling':
 			case 'law':
-				self::addBeforeSection( $parser, $sectionContent, 'חקיקה_ונהלים' );
+				self::addBeforeSection( $parser, $sectionContent,
+					[ 'חקיקה_ונהלים', 'פסקי_דין', 'הרחבות_ופרסומים', 'תודות' ]
+				);
 				break;
 		}
 
